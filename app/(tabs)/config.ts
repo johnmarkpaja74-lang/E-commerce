@@ -1,0 +1,1 @@
+// This file is redundant. The app uses src/features/auth/state/config.ts
