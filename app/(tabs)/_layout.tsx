@@ -3,13 +3,12 @@ import { Tabs } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useCartStore } from '@/src/features/cart/state/cartStore';
 
 export default function TabLayout() {
-  const theme = Colors;
+  const theme = Colors; // Use the single theme object
   const insets = useSafeAreaInsets();
   const items = useCartStore((state) => state.items);
   const initializeFromDatabase = useCartStore((state) => state.initializeFromDatabase);
@@ -29,9 +28,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textSecondary,
         headerShown: false,
-        tabBarButton: HapticTab,
         tabBarStyle: {
-          height: 60 + Math.max(insets.bottom, 10),
+          height: 56 + insets.bottom,
           paddingTop: 6,
           paddingBottom: Math.max(insets.bottom, 10),
           backgroundColor: theme.surface,

@@ -1,4 +1,4 @@
-import type { CartItem, CartOperation } from '@/src/features/cart/model/types';
+import type { CartItem, CartOperation } from './types';
 
 type RebuildResult = {
   items: CartItem[];

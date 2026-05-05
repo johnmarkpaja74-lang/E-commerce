@@ -35,7 +35,7 @@ type ProfileSettingsSnapshot = {
   address: string;
   notificationsEnabled: boolean;
   trustedDevice: boolean;
-  lastPasswordUpdate: string | null;
+  lastPasswordUpdate: string | null; // Removed language
 };
 
 const DEFAULT_AVATAR_URL =
@@ -45,7 +45,7 @@ const DEFAULT_SETTINGS: ProfileSettingsSnapshot = {
   address: '123 Main Street, New York, USA',
   notificationsEnabled: true,
   trustedDevice: true,
-  lastPasswordUpdate: null,
+  lastPasswordUpdate: null, // Removed language
 };
 
 const PRIMARY_MENU: MenuItem[] = [
@@ -56,7 +56,6 @@ const PRIMARY_MENU: MenuItem[] = [
 const SECONDARY_MENU: MenuItem[] = [
   { icon: 'notifications', label: 'Notifications' },
   { icon: 'vpn-key', label: 'Passwords' },
-  { icon: 'chat-bubble-outline', label: 'Language' },
 ];
 
 const QUICK_ACTIONS: QuickAction[] = [
@@ -72,11 +71,11 @@ function ensureProfileTables(): void {
   try {
     database.getFirstSync('SELECT trusted_device FROM profile_settings LIMIT 1;');
     database.getFirstSync('SELECT header_background_color FROM profile_preferences LIMIT 1;');
-  } catch (e) {
+  } catch {
     try {
       database.execSync('DROP TABLE IF EXISTS profile_preferences;');
       database.execSync('DROP TABLE IF EXISTS profile_settings;');
-    } catch (inner) { /* ignore */ }
+    } catch { /* ignore */ }
   }
 
   database.execSync(`
@@ -92,7 +91,6 @@ function ensureProfileTables(): void {
       address TEXT NOT NULL DEFAULT '123 Main Street, New York, USA',
       notifications_enabled INTEGER NOT NULL DEFAULT 1,
       trusted_device INTEGER NOT NULL DEFAULT 1,
-      language TEXT NOT NULL DEFAULT 'English',
       last_password_update TEXT
     );
   `);
@@ -101,13 +99,14 @@ function ensureProfileTables(): void {
 // This function is now only responsible for loading, not schema management
 function loadProfilePreferences(userId: string): ProfilePreferences {
   const database = getDatabase();
-  const row = database.getFirstSync<{ display_name: string | null; avatar_url: string | null }>(
-    'SELECT display_name, avatar_url FROM profile_preferences WHERE user_id = ?;',
+  const row = database.getFirstSync<{ display_name: string | null; avatar_url: string | null; header_background_color: string | null }>(
+    'SELECT display_name, avatar_url, header_background_color FROM profile_preferences WHERE user_id = ?;',
     [userId]
   );
   return {
     displayName: row?.display_name ?? null,
     avatarUrl: row?.avatar_url ?? null,
+    headerBackgroundColor: row?.header_background_color ?? null,
   };
 }
 
@@ -129,46 +128,6 @@ function loadProfileSettings(userId: string): ProfileSettingsSnapshot {
     trustedDevice: row?.trusted_device === 1,
     lastPasswordUpdate: row?.last_password_update ?? null,
   };
-}
-
-// This function is now only responsible for saving, not schema management
-function saveProfilePreferences(userId: string, prefs: ProfilePreferences): void {
-  const database = getDatabase();
-  database.runSync(
-    `
-      INSERT INTO profile_preferences (user_id, display_name, avatar_url)
-      VALUES (?, ?, ?)
-      ON CONFLICT(user_id) DO UPDATE SET
-        display_name = excluded.display_name,
-        avatar_url = excluded.avatar_url;
-    `,
-    [userId, prefs.displayName, prefs.avatarUrl]
-  );
-}
-
-// This function is now only responsible for saving, not schema management
-function saveProfileSettings(userId: string, settings: ProfileSettingsSnapshot): void {
-  const database = getDatabase();
-  database.runSync(
-    `
-      INSERT INTO profile_settings (user_id, address, notifications_enabled, trusted_device, language, last_password_update)
-      VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(user_id) DO UPDATE SET
-        address = excluded.address,
-        notifications_enabled = excluded.notifications_enabled,
-        trusted_device = excluded.trusted_device,
-        language = excluded.language,
-        last_password_update = excluded.last_password_update;
-    `,
-    [
-      userId,
-      settings.address,
-      settings.notificationsEnabled ? 1 : 0,
-      settings.trustedDevice ? 1 : 0,
-      settings.language,
-      settings.lastPasswordUpdate,
-    ]
-  );
 }
 
 function SettingsRow({ icon, label, onPress }: MenuItem & { onPress: () => void }) {
@@ -199,7 +158,7 @@ export default function ProfileScreen() {
   const clearError = useAuthStore((state) => state.clearError);
 
   // Google Auth Request Hook
-  const [request, response, promptAsync] = Google.useAuthRequest({
+  const [, response, promptAsync] = Google.useAuthRequest({
     iosClientId: '581497630541-ios.apps.googleusercontent.com',
     androidClientId: '581497630541-android.apps.googleusercontent.com',
     webClientId: '581497630541-web.apps.googleusercontent.com',
@@ -220,8 +179,7 @@ export default function ProfileScreen() {
   const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [address, setAddress] = useState('123 Main Street, New York, USA');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [language, setLanguage] = useState<'English' | 'Filipino'>('English');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true); // Removed language state
   const [lastPasswordUpdate, setLastPasswordUpdate] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
@@ -233,7 +191,6 @@ export default function ProfileScreen() {
       setAvatarUrl(null);
       setAddress(DEFAULT_SETTINGS.address);
       setNotificationsEnabled(DEFAULT_SETTINGS.notificationsEnabled);
-      setLanguage(DEFAULT_SETTINGS.language);
       setLastPasswordUpdate(null);
       return;
     }
@@ -244,13 +201,12 @@ export default function ProfileScreen() {
       const settings = loadProfileSettings(session.id);
       setAddress(settings.address);
       setNotificationsEnabled(settings.notificationsEnabled);
-      setLanguage(settings.language);
       setLastPasswordUpdate(settings.lastPasswordUpdate);
     } catch (e) {
       console.error('Failed to load local profile:', e);
       Alert.alert('Database Error', 'Could not load local settings. Using defaults instead.');
     }
-  }, [session?.id, session?.displayName, session?.photoURL]); // Added session?.displayName and session?.photoURL to dependencies
+  }, [session?.id]);
 
   useEffect(() => {
     // Run migrations and ensure tables once on component mount
@@ -274,8 +230,8 @@ export default function ProfileScreen() {
     if (profileDisplayName && profileDisplayName.trim().length > 0) {
       return profileDisplayName.trim();
     }
-    return session?.displayName ?? session?.email.split('@')[0] ?? 'Guest';
-  }, [profileDisplayName, session?.email, session?.displayName]); // Added session?.email and session?.displayName to dependencies
+    return session?.displayName ?? session?.email?.split('@')[0] ?? 'Guest';
+  }, [profileDisplayName, session?.email, session?.displayName]);
 
   // Prioritize local avatar, then Firebase photoURL, then a generic default
   const resolvedAvatar = useMemo(() => avatarUrl || session?.photoURL || DEFAULT_AVATAR_URL, [
@@ -308,7 +264,7 @@ export default function ProfileScreen() {
     try {
       await resetPassword(email);
       Alert.alert('Email Sent', 'Check your inbox for instructions to reset your password.');
-    } catch (e) {
+    } catch {
       // Error is handled by the store
     }
   }
@@ -422,9 +378,6 @@ export default function ProfileScreen() {
                     if (item.label === 'Passwords') {
                       openSection('passwords');
                       return;
-                    }
-                    if (item.label === 'Language') {
-                      openSection('language');
                     }
                   }}
                 />

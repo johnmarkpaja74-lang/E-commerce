@@ -1,9 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { Platform } from 'react-native';
 
 // TODO: Replace these placeholders with your actual Firebase project keys
 // You can find these in your Firebase Console: Project Settings > General > Your apps (Web app)
@@ -21,26 +20,14 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize Firestore
-const db = getFirestore(app);
+export const db = getFirestore(app);
+
+// Initialize Analytics Promise for safe usage across platforms
+export const analyticsPromise = isSupported().then(yes => yes ? getAnalytics(app) : null);
 
 // Initialize Storage
-const storage = getStorage(app);
+export const storage = getStorage(app);
 
-// Initialize Auth with persistence based on the platform
-// We use a conditional check to ensure initializeAuth is only called once
-const auth = (() => {
-  if (Platform.OS === 'web') {
-    return getAuth(app);
-  }
-  // For Native, try to get existing auth first, otherwise initialize
-  try {
-    return getAuth(app);
-  } catch (e) {
-    return initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    });
-  }
-})();
+export const auth = getAuth(app);
 
-export { auth, db, storage };
 

@@ -3,7 +3,8 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { useCartStore, type CartItem } from '@/src/features/cart/state/cartStore';
+import type { CartItem } from '@/src/features/cart/model/types'; // Import CartItem from model/types
+import { useCartStore } from '@/src/features/cart/state/cartStore';
 import { useCheckoutDraftStore } from '@/src/features/orders/state/checkoutDraftStore';
 
 const DELIVERY_OPTIONS = [
@@ -241,7 +242,7 @@ export default function CartScreen() {
         <Text style={styles.heroTitle}>My Cart</Text>
         <View style={styles.searchRow}>
           <View style={styles.searchBox}>
-            <MaterialIcons name="search" size={20} color="#ff4d4f" />
+            <MaterialIcons name="search" size={20} color="#FF6700" />
             <TextInput
               value={search}
               onChangeText={setSearch}
@@ -384,7 +385,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkBoxActive: { backgroundColor: '#ffe7e7', borderColor: '#ffb4b4' },
+  checkBoxActive: { backgroundColor: '#fff3e0', borderColor: '#FF6700' },
   removeBtn: {
     position: 'absolute',
     left: 10,
@@ -431,16 +432,16 @@ const styles = StyleSheet.create({
   },
   summaryTitle: { color: '#111827', fontSize: 18, fontWeight: '800' },
   deliveryRow: { flexDirection: 'row', gap: 8 },
-  deliveryChip: { flex: 1, minHeight: 34, borderRadius: 17, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e5e7eb', shadowColor: '#0f172a', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
-  deliveryChipActive: { backgroundColor: '#ffeaea', borderColor: '#ffcece' },
+  deliveryChip: { flex: 1, minHeight: 34, borderRadius: 17, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e5e7eb', shadowColor: '#0f172a', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 }, // Removed hardcoded red
+  deliveryChipActive: { backgroundColor: 'rgba(255,103,0,0.1)', borderColor: '#FF6700' }, // Consistent with Blaze Orange
   deliveryText: { color: '#4b5563', fontWeight: '700', fontSize: 12 },
   deliveryTextActive: { color: '#b91c1c' },
   promoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   promoInput: { flex: 1, backgroundColor: '#f8fafc', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#111827', borderWidth: 1, borderColor: '#e5e7eb' },
   promoBtn: { borderRadius: 10, backgroundColor: '#111827', paddingHorizontal: 12, paddingVertical: 10 },
   promoBtnText: { color: '#fff', fontWeight: '700' },
-  promoBtnMuted: { borderRadius: 10, backgroundColor: '#fee2e2', paddingHorizontal: 12, paddingVertical: 10 },
-  promoBtnMutedText: { color: '#b91c1c', fontWeight: '700' },
+  promoBtnMuted: { borderRadius: 10, backgroundColor: 'rgba(255,103,0,0.1)', paddingHorizontal: 12, paddingVertical: 10 }, // Consistent with Blaze Orange
+  promoBtnMutedText: { color: '#FF6700', fontWeight: '700' }, // Consistent with Blaze Orange
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryLabel: { color: '#6b7280' },
   summaryValue: { color: '#111827', fontWeight: '700' },

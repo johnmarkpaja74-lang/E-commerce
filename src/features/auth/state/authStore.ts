@@ -95,7 +95,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await authRepository.clearSession();
       set({ session: null, isLoading: false });
-    } catch (e) {
+    } catch {
       set({ 
         error: 'Logout failed', 
         isLoading: false 

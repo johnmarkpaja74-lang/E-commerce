@@ -1,8 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { logEvent } from 'firebase/analytics';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Colors } from '@/constants/theme';
@@ -11,7 +10,6 @@ import { analyticsPromise } from '@/src/features/auth/state/config';
 import { useCartStore } from '@/src/features/cart/state/cartStore';
 import { usePaginatedProducts } from '@/src/features/products/state/usePaginatedProducts';
 import { fetchProductCategories, type Product } from '@/src/services/api/commerceApi';
-import { getDatabase } from '@/src/services/storage/sqlite/db';
 
 function categoryIcon(category: string): keyof typeof MaterialIcons.glyphMap {
   const key = category.toLowerCase();
@@ -86,55 +84,6 @@ export default function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isAddingId, setIsAddingId] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
-  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
-
-  const handleToggleWishlist = useCallback((product: Product) => {
-    if (!session?.id) {
-      Alert.alert('Login Required', 'Please sign in to wishlist items.');
-      return;
-    }
-
-    const productId = product.id;
-    const db = getDatabase();
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    setWishlistIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(productId)) {
-        next.delete(productId);
-        db.runSync('DELETE FROM wishlist WHERE user_id = ? AND product_id = ?;', [session.id, productId]);
-      } else {
-        next.add(productId);
-        db.runSync(
-          'INSERT OR REPLACE INTO wishlist (user_id, product_id, name, price, image_url) VALUES (?, ?, ?, ?, ?);',
-          [session.id, productId, product.name, product.price, product.imageUrl]
-        );
-      }
-      return next;
-    });
-  }, [session?.id]);
-
-  useEffect(() => {
-    if (session?.id) {
-      const db = getDatabase();
-      // Ensure wishlist table exists for consistency
-      db.execSync(`
-        CREATE TABLE IF NOT EXISTS wishlist (
-          user_id TEXT,
-          product_id TEXT,
-          name TEXT,
-          price REAL,
-          image_url TEXT,
-          PRIMARY KEY(user_id, product_id)
-        );
-      `);
-      const rows = db.getAllSync<{ product_id: string }>('SELECT product_id FROM wishlist WHERE user_id = ?;', [session.id]);
-      setWishlistIds(new Set(rows.map((r) => r.product_id)));
-    } else {
-      setWishlistIds(new Set());
-    }
-  }, [session?.id]);
-
   useEffect(() => {
     let mounted = true;
     void (async () => {

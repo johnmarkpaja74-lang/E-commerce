@@ -2,6 +2,7 @@ import { auth, db, storage } from '@/src/features/auth/state/config';
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
+  onAuthStateChanged,
   sendPasswordResetEmail,
   signInWithCredential,
   signInWithEmailAndPassword,
@@ -71,7 +72,7 @@ export const authRepository = {
         displayName: displayName,
         photoURL: defaultPhotoURL,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(getAuthErrorMessage(error));
     }
   },
@@ -80,7 +81,7 @@ export const authRepository = {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       return mapFirebaseUser(userCredential.user);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(getAuthErrorMessage(error));
     }
   },
@@ -103,7 +104,7 @@ export const authRepository = {
       }
 
       return mapFirebaseUser(userCredential.user);
-    } catch (error) {
+    } catch {
       throw new Error('Google Sign-In failed');
     }
   },
@@ -111,7 +112,7 @@ export const authRepository = {
   async sendPasswordReset(email: string): Promise<void> {
     try {
       await sendPasswordResetEmail(auth, email);
-    } catch (error) {
+    } catch {
       throw new Error('Failed to send reset email. Please check the address.');
     }
   },
@@ -137,11 +138,14 @@ export const authRepository = {
     return downloadURL;
   },
 
-  persistSession(userId: string): void {
+  persistSession(_userId: string): void {
     // Firebase handles this automatically via the SDK.
   },
 
-  async onSessionChange(callback: (session: UserSession | null) => void): Promise<void> {
+  onSessionChange(callback: (session: UserSession | null) => void): () => void {
+    return onAuthStateChanged(auth, (user) => {
+      callback(user ? mapFirebaseUser(user) : null);
+    });
   },
 
   async clearSession(): Promise<void> {

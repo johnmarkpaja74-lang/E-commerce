@@ -1,11 +1,11 @@
-import { sendCartOperation } from '@/src/services/api/client';
-import { logError, logWarning } from '@/src/services/logging/logger';
 import {
   loadPendingCartOperationsFromStorage,
   markCartOperationSynced,
 } from '@/src/features/cart/data/cartLocalDataSource';
 import type { CartOperation } from '@/src/features/cart/model/types';
 import { applyCartConflicts } from '@/src/features/cart/sync/conflictResolver';
+import { sendCartOperation } from '@/src/services/api/client';
+import { logError, logWarning } from '@/src/services/logging/logger';
 
 function isNetworkSyncError(error: unknown): boolean {
   if (!(error instanceof Error)) {

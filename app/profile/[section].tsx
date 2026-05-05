@@ -15,13 +15,20 @@ type ProfileSettings = {
   address: string;
   notificationsEnabled: boolean;
   trustedDevice: boolean;
-  lastPasswordUpdate: string | null;
+  lastPasswordUpdate: string | null; // Removed language
 };
 
 type ProfilePrefs = {
   displayName: string | null;
   avatarUrl: string | null;
   headerBackgroundColor: string | null;
+};
+
+type WishlistItem = {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl: string | null;
 };
 const DEFAULT_AVATAR_URL =
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=60';
@@ -30,7 +37,7 @@ const DEFAULT_SETTINGS: ProfileSettings = {
   address: '123 Main Street, New York, USA',
   notificationsEnabled: true,
   trustedDevice: true,
-  lastPasswordUpdate: null,
+  lastPasswordUpdate: null, // Removed language
 };
 
 const SECTION_CONFIG: Record<string, { title: string; description: string; icon: keyof typeof MaterialIcons.glyphMap }> = {
@@ -40,7 +47,7 @@ const SECTION_CONFIG: Record<string, { title: string; description: string; icon:
   account: { title: 'Account', description: 'Update your display name.', icon: 'groups' },
   notifications: { title: 'Notifications', description: 'Turn app notifications on or off.', icon: 'notifications' },
   passwords: { title: 'Passwords', description: 'Set a new password for your account.', icon: 'vpn-key' },
-  bag: { title: 'Bag', description: 'Open your cart bag.', icon: 'shopping-bag' },
+  bag: { title: 'Bag', description: 'Open your cart bag.', icon: 'shopping-bag' }, // Removed language
 };
 
 const THEME_COLORS = ['#FF6700', '#6366f1', '#10b981', '#f43f5e', '#334155'];
@@ -52,11 +59,11 @@ function ensureProfileTables(): void {
   try {
     db.getFirstSync('SELECT trusted_device FROM profile_settings LIMIT 1;');
     db.getFirstSync('SELECT header_background_color FROM profile_preferences LIMIT 1;');
-  } catch (e) {
+  } catch {
     try {
       db.execSync('DROP TABLE IF EXISTS profile_preferences;');
       db.execSync('DROP TABLE IF EXISTS profile_settings;');
-    } catch (inner) { /* ignore */ }
+    } catch { /* ignore */ }
   }
 
   db.execSync(`
@@ -93,8 +100,8 @@ function loadSettings(userId: string): ProfileSettings {
     address: string;
     notifications_enabled: number;
     trusted_device: number;
-    last_password_update: string | null;
-  }>('SELECT address, notifications_enabled, trusted_device, last_password_update FROM profile_settings WHERE user_id = ?;', [userId]);
+    last_password_update: string | null; // Removed language
+  }>('SELECT address, notifications_enabled, trusted_device, last_password_update FROM profile_settings WHERE user_id = ?;', [userId]); // Removed language
 
   if (!row) {
     return DEFAULT_SETTINGS;
@@ -104,7 +111,7 @@ function loadSettings(userId: string): ProfileSettings {
     address: row.address || DEFAULT_SETTINGS.address,
     notificationsEnabled: row.notifications_enabled === 1,
     trustedDevice: row.trusted_device === 1,
-    lastPasswordUpdate: row.last_password_update,
+    lastPasswordUpdate: row.last_password_update, // Removed language
   };
 }
 
@@ -125,7 +132,7 @@ function saveSettings(userId: string, settings: ProfileSettings): void {
       settings.address,
       settings.notificationsEnabled ? 1 : 0,
       settings.trustedDevice ? 1 : 0,
-      settings.lastPasswordUpdate,
+      settings.lastPasswordUpdate, // Removed settings.language
     ]
   );
 }
@@ -156,17 +163,26 @@ function saveProfilePrefs(userId: string, prefs: ProfilePrefs): void {
   );
 }
 
-function loadWishlist(userId: string) {
+function loadWishlist(userId: string): WishlistItem[] {
   const db = getDatabase();
-  return db.getAllSync<{
-    id: string;
-    name: string;
-    price: number;
-    imageUrl: string;
+  const rows = db.getAllSync<{
+    id: string | null;
+    name: string | null;
+    price: number | string | null;
+    imageUrl: string | null;
   }>(
     'SELECT product_id as id, name, price, image_url as imageUrl FROM wishlist WHERE user_id = ?;',
     [userId]
   );
+
+  return rows
+    .filter((row) => !!row.id)
+    .map((row) => ({
+      id: String(row.id),
+      name: (row.name ?? 'Untitled item').trim() || 'Untitled item',
+      price: Number.isFinite(Number(row.price)) ? Number(row.price) : 0,
+      imageUrl: row.imageUrl ?? null,
+    }));
 }
 
 function removeFromWishlist(userId: string, productId: string): void {
@@ -174,17 +190,10 @@ function removeFromWishlist(userId: string, productId: string): void {
   db.runSync('DELETE FROM wishlist WHERE user_id = ? AND product_id = ?;', [userId, productId]);
 }
 
-function addToWishlist(userId: string, product: any): void {
-  const db = getDatabase();
-  db.runSync(
-    'INSERT OR REPLACE INTO wishlist (user_id, product_id, name, price, image_url) VALUES (?, ?, ?, ?, ?);',
-    [userId, product.id, product.name, product.price, product.imageUrl]
-  );
-}
-
 export default function ProfileSectionScreen() {
   const router = useRouter();
   const { section } = useLocalSearchParams<{ section: string }>();
+  const key = (section ?? '').toLowerCase();
   const session = useAuthStore((state) => state.session);
   const addItem = useCartStore((state) => state.addItem);
   const initializeFromDatabase = useCartStore((state) => state.initializeFromDatabase);
@@ -197,7 +206,7 @@ export default function ProfileSectionScreen() {
   const [addressDraft, setAddressDraft] = useState('');
   const [passwordDraft, setPasswordDraft] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
 
   useEffect(() => {
     runMigrations();
@@ -219,7 +228,7 @@ export default function ProfileSectionScreen() {
         }
 
         void initializeFromDatabase();
-      } catch (e) {
+      } catch (e: unknown) {
         console.error('Section load error:', e);
         Alert.alert('Error', 'Could not load your data. Please try again later.');
       }
@@ -230,7 +239,6 @@ export default function ProfileSectionScreen() {
     if (session?.id) setWishlistItems(loadWishlist(session.id));
   }, [session?.id]);
 
-  const key = (section ?? '').toLowerCase();
   const config = SECTION_CONFIG[key] ?? {
     title: 'Profile Section',
     description: 'This section is ready for content.',
@@ -278,9 +286,9 @@ export default function ProfileSectionScreen() {
     Alert.alert('Saved', 'Profile photo updated.');
   }
 
-  async function handleWishlistToCart(item: any): Promise<void> {
+  async function handleWishlistToCart(item: WishlistItem): Promise<void> {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    await addItem({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl });
+    await addItem({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl ?? undefined });
     Alert.alert('Added to cart', `${item.name} is ready for checkout.`);
   }
 
@@ -290,7 +298,7 @@ export default function ProfileSectionScreen() {
     try {
       removeFromWishlist(session.id, productId);
       refreshWishlist();
-    } catch (e) {
+    } catch {
       Alert.alert('Error', 'Could not remove item.');
     }
   }
@@ -339,7 +347,7 @@ export default function ProfileSectionScreen() {
         <View style={styles.wishlistList}>
           {wishlistItems.map((item) => (
             <View key={item.id} style={styles.wishlistItem}>
-              <Image source={{ uri: item.imageUrl }} style={styles.wishlistImage} />
+              <Image source={item.imageUrl ? { uri: item.imageUrl } : DEFAULT_AVATAR_URL} style={styles.wishlistImage} />
               <View style={styles.wishlistMeta}>
                 <Text style={styles.wishlistName} numberOfLines={1}>{item.name}</Text>
                 <Text style={styles.wishlistPrice}>${item.price.toFixed(2)}</Text>

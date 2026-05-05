@@ -1,6 +1,5 @@
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 export const unstable_settings = {
@@ -27,7 +26,7 @@ export default function RootLayout() {
         <Stack.Screen name="receipt" options={{ headerShown: false }} />
         <Stack.Screen name="profile/[section]" options={{ headerShown: false }} />
       </Stack>
-      <StatusBar style="auto" />
+      {/* <StatusBar style="auto" /> // StatusBar is typically handled in individual screens or a global component */}
     </ThemeProvider>
   );
 }

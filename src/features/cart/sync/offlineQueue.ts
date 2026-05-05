@@ -1,10 +1,10 @@
 import { flushPendingCartOperations } from '@/src/features/cart/sync/cartSync';
+import { logError, logInfo, logWarning } from '@/src/services/logging/logger';
 import {
   isOnline,
   startConnectivityMonitoring,
   subscribeConnectivity,
 } from '@/src/services/network/connectivity';
-import { logError, logInfo, logWarning } from '@/src/services/logging/logger';
 
 type QueueConfig = {
   maxRetries: number;

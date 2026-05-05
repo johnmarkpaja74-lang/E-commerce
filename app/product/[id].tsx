@@ -77,7 +77,7 @@ export default function ProductDetailsScreen() {
     } else {
       db.runSync(
         'INSERT OR REPLACE INTO wishlist (user_id, product_id, name, price, image_url) VALUES (?, ?, ?, ?, ?);',
-        [session.id, product.id, product.name, product.price, product.imageUrl]
+        [session.id, product.id, product.name, product.price, product.imageUrl ?? null] // Ensure imageUrl is string | null
       );
       setIsWishlisted(true);
     }
@@ -426,20 +426,8 @@ const styles = StyleSheet.create({
   optionChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   optionChipText: { color: '#374151', fontWeight: '700' },
   optionChipTextActive: { color: '#fff' },
-  qtyPickerRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  qtyPickerBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0f172a',
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
+  qtyPickerRow: { flexDirection: 'row', alignItems: 'center', gap: 14 }, // Removed shadows
+  qtyPickerBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center', /* Removed shadows */ },
   qtyPickerBtnText: { fontSize: 20, fontWeight: '800', color: '#111827' },
   qtyPickerValue: { minWidth: 30, textAlign: 'center', fontSize: 18, fontWeight: '800', color: '#111827' },
   modalActions: { flexDirection: 'row', gap: 8, marginTop: 8 },
@@ -450,11 +438,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0f172a',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    /* Removed shadows */
   },
   modalCancelText: { color: '#1f2937', fontWeight: '700' },
   modalConfirmBtn: {
@@ -465,6 +449,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
-  },
+  }, // Removed shadows
   modalConfirmText: { color: '#fff', fontWeight: '800', textAlign: 'center', width: '100%', fontSize: 15 },
 });

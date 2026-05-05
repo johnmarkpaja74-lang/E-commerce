@@ -1,6 +1,5 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Below are the colors that are used in the app. The colors are defined for a single theme.
  */
 
 import { Platform } from 'react-native';
@@ -8,19 +7,19 @@ import { Platform } from 'react-native';
 const primaryBlaze = '#FF6700';
 
 export const Colors = {
-  primary: primaryBlaze,
-  accent: primaryBlaze,
-  text: '#11181C',
-  textSecondary: '#687076',
-  background: '#f5f5f6',
-  surface: '#ffffff',
-  border: '#e5e7eb',
-  tint: primaryBlaze,
-  icon: '#687076',
-  tabIconDefault: '#687076',
-  tabIconSelected: primaryBlaze,
-  card: '#ffffff',
-  error: primaryBlaze,
+  primary: primaryBlaze, // Main brand color (Blaze Orange)
+  accent: primaryBlaze, // Accent color, often same as primary for consistency (Blaze Orange)
+  text: '#11181C', // Dark text for light backgrounds (Near black)
+  textSecondary: '#687076', // Lighter text for secondary info (Gray)
+  background: '#f5f5f6', // Light background for general screens (Off-white)
+  surface: '#ffffff', // White background for cards, modals, etc. (Pure white)
+  border: '#e5e7eb', // Light border color (Light gray)
+  tint: primaryBlaze, // Tint color for icons/active states (Blaze Orange)
+  icon: '#687076', // Default icon color (Gray)
+  tabIconDefault: '#687076', // Default tab icon color (Gray)
+  tabIconSelected: primaryBlaze, // Selected tab icon color (Blaze Orange)
+  card: '#ffffff', // Card background color (Pure white)
+  error: primaryBlaze, // Error message color (Blaze Orange)
 };
 
 export const Fonts = Platform.select({
