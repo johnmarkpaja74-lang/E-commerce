@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "commerceapp",
-    "slug": "commerceapp",
+    "name": "E-Buy",
+    "slug": "e-buy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "commerceapp",
+    "scheme": "e-buy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -38,7 +38,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
